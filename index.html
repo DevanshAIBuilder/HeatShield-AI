@@ -1,0 +1,437 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+  <!-- SEO -->
+  <title>HeatShield AI — Personalised Heatwave Preparedness Agent</title>
+  <meta name="description" content="HeatShield AI analyses your household profile to identify heatwave vulnerability factors and generate a personalised preparedness plan. Built on NDMA and IMD guidelines.">
+  <meta name="keywords" content="heatwave preparedness, heat safety India, NDMA heat wave, household vulnerability, heat stroke prevention">
+  <meta name="author" content="HeatShield AI — Team Devansh, Arsh, Ehtesham">
+
+  <!-- Open Graph -->
+  <meta property="og:title" content="HeatShield AI — Heatwave Preparedness Agent">
+  <meta property="og:description" content="Personalised household heatwave preparedness powered by AI and NDMA guidelines.">
+  <meta property="og:type" content="website">
+
+  <!-- Favicon -->
+  <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🔥</text></svg>">
+
+  <!-- Styles -->
+  <link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+
+  <!-- ══════════════════════════════════════════════════════════
+       HEADER
+  ════════════════════════════════════════════════════════════ -->
+  <header id="app-header">
+    <div class="header-inner">
+      <div class="logo" style="cursor:pointer" onclick="navigateTo('home')">
+        <svg class="logo-icon" viewBox="0 0 40 40" fill="none" xmlns="http://www.w3.org/2000/svg" aria-label="HeatShield AI Logo">
+          <defs>
+            <linearGradient id="logoGrad" x1="0" y1="0" x2="40" y2="40" gradientUnits="userSpaceOnUse">
+              <stop stop-color="#f59e0b"/>
+              <stop offset="0.5" stop-color="#f97316"/>
+              <stop offset="1" stop-color="#ef4444"/>
+            </linearGradient>
+          </defs>
+          <path d="M20 4C20 4 8 14 8 23C8 29.627 13.373 35 20 35C26.627 35 32 29.627 32 23C32 14 20 4 20 4Z" fill="url(#logoGrad)" opacity="0.9"/>
+          <path d="M20 14C20 14 14 20 14 25C14 28.314 16.686 31 20 31C23.314 31 26 28.314 26 25C26 20 20 14 20 14Z" fill="white" opacity="0.25"/>
+          <circle cx="20" cy="25" r="4" fill="white" opacity="0.5"/>
+        </svg>
+        <span class="logo-text">HeatShield AI</span>
+      </div>
+
+      <div id="step-indicator" aria-label="Progress steps"></div>
+
+      <button class="settings-btn" id="settings-btn" title="Settings — Add Gemini API Key" aria-label="Open settings">⚙️</button>
+    </div>
+  </header>
+
+  <!-- ══════════════════════════════════════════════════════════
+       MAIN APP
+  ════════════════════════════════════════════════════════════ -->
+  <main id="app-main">
+
+    <!-- ─── PAGE 1: HOME ──────────────────────────────────── -->
+    <section id="page-home" class="page active" aria-label="Home page">
+
+      <div class="home-hero">
+        <div class="hero-logo" aria-hidden="true">🔥</div>
+
+        <h1>
+          <span class="text-gradient">HeatShield AI</span>
+        </h1>
+        <p style="font-size:1.1rem; color:var(--text-secondary); margin-top:8px; font-weight:500">
+          Personalised Household Heatwave Preparedness
+        </p>
+        <p class="hero-tagline">
+          Tell us about your household. We'll identify your specific heatwave vulnerabilities
+          and generate a prioritised preparedness plan — powered by NDMA guidelines and Google Gemini AI.
+        </p>
+
+        <div class="hero-cta-group">
+          <button class="btn btn-primary btn-lg" id="start-btn" onclick="navigateTo('profile'); initProfileForm()">
+            🏠 Create Household Profile
+          </button>
+          <a href="https://ndma.gov.in/Natural-Hazard/Heat-Wave" target="_blank" rel="noopener" class="btn btn-secondary">
+            📋 NDMA Guidelines ↗
+          </a>
+        </div>
+
+        <div class="demo-info">
+          <span>🧪</span>
+          <span>
+            <strong>Hackathon Demo Mode:</strong> Demo heatwave data is seeded for 10 Indian cities (Delhi, Mumbai, Ahmedabad…).
+            Add a free <a href="https://aistudio.google.com/app/apikey" target="_blank" rel="noopener" style="color:var(--info)">Gemini API key</a>
+            in ⚙️ Settings for AI-powered personalised plans. The app works fully without it using a rule-based fallback.
+          </span>
+        </div>
+      </div>
+
+      <div class="feature-grid">
+        <div class="feature-card">
+          <div class="feature-icon">🏠</div>
+          <div class="feature-title">Household Profiling</div>
+          <div class="feature-desc">Input your household's specific conditions, members, and resources</div>
+        </div>
+        <div class="feature-card">
+          <div class="feature-icon">⚡</div>
+          <div class="feature-title">Vulnerability Scoring</div>
+          <div class="feature-desc">Instant risk assessment based on 14 evidence-based vulnerability factors</div>
+        </div>
+        <div class="feature-card">
+          <div class="feature-icon">🤖</div>
+          <div class="feature-title">AI Prioritisation</div>
+          <div class="feature-desc">Google Gemini generates personalised risk priorities and actions</div>
+        </div>
+        <div class="feature-card">
+          <div class="feature-icon">✅</div>
+          <div class="feature-title">Action Checklist</div>
+          <div class="feature-desc">Interactive before / during heatwave preparedness checklist</div>
+        </div>
+        <div class="feature-card">
+          <div class="feature-icon">🌡️</div>
+          <div class="feature-title">Heatwave Context</div>
+          <div class="feature-desc">City-level alert status and IMD advisory data</div>
+        </div>
+        <div class="feature-card">
+          <div class="feature-icon">📤</div>
+          <div class="feature-title">Shareable Safety Card</div>
+          <div class="feature-desc">Download a PNG safety card to share with family and neighbours</div>
+        </div>
+      </div>
+
+      <div class="glass-card" style="margin-top:24px; padding:20px 24px">
+        <h3 class="section-title">📢 Important Notice</h3>
+        <p style="font-size:0.85rem; color:var(--text-secondary); line-height:1.7">
+          HeatShield AI provides <strong>preparedness and prevention guidance only</strong>.
+          It is not a medical diagnosis or treatment system.
+          All guidance is based on publicly available
+          <a href="https://ndma.gov.in" target="_blank" rel="noopener" style="color:var(--info)">NDMA</a> and
+          <a href="https://mausam.imd.gov.in" target="_blank" rel="noopener" style="color:var(--info)">IMD</a> advisories.
+          For medical emergencies, call <strong>112</strong> or <strong>108</strong>.
+        </p>
+      </div>
+
+      <!-- Team Credits -->
+      <div style="text-align:center; margin-top:32px; color:var(--text-muted); font-size:0.78rem">
+        Built at Hackathon by <strong style="color:var(--text-secondary)">Devansh Nigam</strong>,
+        <strong style="color:var(--text-secondary)">Mohd Arsh Nafis</strong> &
+        <strong style="color:var(--text-secondary)">Ehtesham Alam</strong> &nbsp;·&nbsp;
+        PS-2: Heatwave Preparedness Agent
+      </div>
+    </section>
+
+
+    <!-- ─── PAGE 2: HOUSEHOLD PROFILE ────────────────────── -->
+    <section id="page-profile" class="page" aria-label="Household profile form">
+
+      <div class="page-header">
+        <h2>🏠 Household Profile</h2>
+        <p>Tell us about your household so we can assess your heatwave vulnerability accurately.</p>
+      </div>
+
+      <form id="profile-form" novalidate>
+
+        <!-- Section: Identification -->
+        <div class="form-section">
+          <div class="form-section-title">🏷️ Identification</div>
+          <div class="form-grid">
+            <div class="field-group">
+              <label for="field-household-name">Household Name / Identifier</label>
+              <input type="text" id="field-household-name" placeholder="e.g. Sharma Family, House 42B" maxlength="60">
+            </div>
+            <div class="field-group">
+              <label for="field-city">City / Location <span style="color:var(--danger)">*</span></label>
+              <input type="text" id="field-city" list="city-datalist" placeholder="e.g. Delhi, Jaipur, Mumbai" autocomplete="off" required>
+              <datalist id="city-datalist"></datalist>
+              <span class="field-error-msg hidden" id="field-city-error"></span>
+            </div>
+            <div class="field-group">
+              <label for="field-state">State</label>
+              <input type="text" id="field-state" placeholder="e.g. Rajasthan, UP, Maharashtra">
+            </div>
+          </div>
+        </div>
+
+        <!-- Section: Household Members -->
+        <div class="form-section">
+          <div class="form-section-title">👨‍👩‍👧‍👦 Household Members</div>
+          <div class="form-grid form-grid-3">
+            <div class="field-group">
+              <label for="field-total">Total Members <span style="color:var(--danger)">*</span></label>
+              <input type="number" id="field-total" min="1" max="30" placeholder="e.g. 5" required>
+              <span class="field-error-msg hidden" id="field-total-error"></span>
+            </div>
+            <div class="field-group">
+              <label for="field-elderly">Elderly (65+)</label>
+              <input type="number" id="field-elderly" min="0" max="20" placeholder="0" value="0">
+              <span class="field-error-msg hidden" id="field-elderly-error"></span>
+            </div>
+            <div class="field-group">
+              <label for="field-children">Children (&lt;12)</label>
+              <input type="number" id="field-children" min="0" max="20" placeholder="0" value="0">
+              <span class="field-error-msg hidden" id="field-children-error"></span>
+            </div>
+            <div class="field-group">
+              <label for="field-pregnant">Pregnant Members</label>
+              <input type="number" id="field-pregnant" min="0" max="5" placeholder="0" value="0">
+              <span class="field-error-msg hidden" id="field-pregnant-error"></span>
+            </div>
+            <div class="field-group">
+              <label for="field-outdoor">Outdoor Workers</label>
+              <input type="number" id="field-outdoor" min="0" max="20" placeholder="0" value="0">
+              <span class="field-error-msg hidden" id="field-outdoor-error"></span>
+            </div>
+          </div>
+          <div class="checkbox-row" style="margin-top:16px">
+            <label class="toggle-wrapper" for="field-chronic">
+              <input type="checkbox" id="field-chronic" class="toggle-input">
+              <span class="toggle-label">🏥 Household member(s) with chronic illness (diabetes, heart disease, kidney disease, respiratory conditions, etc.)</span>
+            </label>
+          </div>
+        </div>
+
+        <!-- Section: Housing Conditions -->
+        <div class="form-section">
+          <div class="form-section-title">🏚️ Housing Conditions</div>
+          <div class="form-grid">
+            <div class="field-group">
+              <label for="field-housing">Housing Type <span style="color:var(--danger)">*</span></label>
+              <select id="field-housing" required>
+                <option value="">— Select —</option>
+                <option value="pucca">Pucca (Brick / Concrete)</option>
+                <option value="flat">Flat / Apartment</option>
+                <option value="semi-pucca">Semi-Pucca (Mixed)</option>
+                <option value="kutcha">Kutcha (Tin / Tarpaulin / Mud)</option>
+              </select>
+              <span class="field-error-msg hidden" id="field-housing-error"></span>
+            </div>
+            <div class="field-group">
+              <label for="field-ventilation">Home Ventilation <span style="color:var(--danger)">*</span></label>
+              <select id="field-ventilation" required>
+                <option value="">— Select —</option>
+                <option value="good">Good (cross-ventilation, multiple windows)</option>
+                <option value="moderate">Moderate (some ventilation)</option>
+                <option value="poor">Poor (limited airflow, single room)</option>
+              </select>
+              <span class="field-error-msg hidden" id="field-ventilation-error"></span>
+            </div>
+          </div>
+        </div>
+
+        <!-- Section: Cooling & Resources -->
+        <div class="form-section">
+          <div class="form-section-title">❄️ Cooling & Resources</div>
+          <div class="form-grid">
+            <div class="field-group">
+              <label for="field-water">Drinking Water Access <span style="color:var(--danger)">*</span></label>
+              <select id="field-water" required>
+                <option value="">— Select —</option>
+                <option value="reliable">Reliable (tap / bore, always available)</option>
+                <option value="intermittent">Intermittent (available some hours)</option>
+                <option value="scarce">Scarce (must fetch / purchase daily)</option>
+              </select>
+              <span class="field-error-msg hidden" id="field-water-error"></span>
+            </div>
+            <div class="field-group">
+              <label for="field-power">Power Supply Reliability <span style="color:var(--danger)">*</span></label>
+              <select id="field-power" required>
+                <option value="">— Select —</option>
+                <option value="reliable">Reliable (rare/no cuts)</option>
+                <option value="frequent-cuts">Frequent cuts (2–8 hrs/day)</option>
+                <option value="unreliable">Unreliable (&gt;8 hrs cuts or off-grid)</option>
+              </select>
+              <span class="field-error-msg hidden" id="field-power-error"></span>
+            </div>
+          </div>
+          <div style="display:flex; flex-direction:column; gap:12px; margin-top:16px">
+            <div class="checkbox-row">
+              <label class="toggle-wrapper" for="field-ac">
+                <input type="checkbox" id="field-ac" class="toggle-input">
+                <span class="toggle-label">❄️ Air conditioning (AC) available at home</span>
+              </label>
+            </div>
+            <div class="checkbox-row">
+              <label class="toggle-wrapper" for="field-fan">
+                <input type="checkbox" id="field-fan" class="toggle-input" checked>
+                <span class="toggle-label">🌬️ Fan or cooler available at home</span>
+              </label>
+            </div>
+          </div>
+        </div>
+
+        <div class="page-actions">
+          <button type="button" class="btn btn-secondary" onclick="navigateTo('home')">← Back to Home</button>
+          <button type="submit" class="btn btn-primary" id="analyse-btn">
+            ⚡ Analyse Vulnerability →
+          </button>
+        </div>
+
+      </form>
+    </section>
+
+
+    <!-- ─── PAGE 3: VULNERABILITY ANALYSIS ───────────────── -->
+    <section id="page-vulnerability" class="page" aria-label="Vulnerability analysis results">
+
+      <div class="page-header">
+        <h2>⚡ Vulnerability Analysis</h2>
+        <p>Rule-based assessment of your household's heatwave risk factors.</p>
+      </div>
+
+      <div id="vulnerability-content">
+        <!-- Rendered dynamically by renderVulnerabilityPage() -->
+        <div style="text-align:center; padding:40px; color:var(--text-muted)">
+          Complete the household profile to see your vulnerability analysis.
+        </div>
+      </div>
+    </section>
+
+
+    <!-- ─── PAGE 4: HEATWAVE CONTEXT ─────────────────────── -->
+    <section id="page-heatwave" class="page" aria-label="Heatwave context and alert level">
+
+      <div class="page-header">
+        <h2>🌡️ Heatwave Context</h2>
+        <p>Current heatwave alert level and conditions for your region.</p>
+      </div>
+
+      <div id="heatwave-content">
+        <!-- Rendered dynamically by renderHeatwavePage() -->
+      </div>
+    </section>
+
+
+    <!-- ─── PAGE 5: AI ANALYSIS ───────────────────────────── -->
+    <section id="page-ai-analysis" class="page" aria-label="AI-powered risk prioritisation">
+
+      <div class="page-header">
+        <h2>🤖 AI Risk Prioritisation</h2>
+        <p>Personalised risk analysis generated by Google Gemini based on your household profile.</p>
+      </div>
+
+      <div id="ai-content">
+        <!-- Rendered dynamically by startAIAnalysis() -->
+      </div>
+    </section>
+
+
+    <!-- ─── PAGE 6: PREPAREDNESS PLAN ────────────────────── -->
+    <section id="page-plan" class="page" aria-label="Personalised preparedness plan">
+
+      <div class="page-header">
+        <h2>📋 Preparedness Plan</h2>
+        <p>Your personalised heatwave preparedness actions and interactive checklist.</p>
+      </div>
+
+      <div id="plan-content">
+        <!-- Rendered dynamically by renderPlanPage() -->
+      </div>
+    </section>
+
+
+    <!-- ─── PAGE 7: SAFETY CARD ───────────────────────────── -->
+    <section id="page-card" class="page" aria-label="Shareable safety card">
+
+      <div class="page-header">
+        <h2>📤 Your Safety Card</h2>
+        <p>Download and share this card with your family, neighbours and community.</p>
+      </div>
+
+      <div id="card-content">
+        <!-- Rendered dynamically by renderCardPage() -->
+      </div>
+    </section>
+
+  </main><!-- #app-main -->
+
+
+  <!-- ══════════════════════════════════════════════════════════
+       SETTINGS MODAL
+  ════════════════════════════════════════════════════════════ -->
+  <div id="settings-modal" class="modal" role="dialog" aria-modal="true" aria-labelledby="settings-title">
+    <div class="modal-content">
+      <h3 class="modal-title" id="settings-title">⚙️ Settings</h3>
+      <p class="modal-subtitle">Configure your Gemini API key for AI-powered personalised plans.</p>
+
+      <div class="api-key-note">
+        <strong>🔑 Gemini API Key</strong><br>
+        Get a free API key from
+        <a href="https://aistudio.google.com/app/apikey" target="_blank" rel="noopener">Google AI Studio ↗</a>.
+        Your key is stored only in your browser's local storage and is never sent to any server other than Google's API.
+        Without a key, HeatShield AI generates a comprehensive rule-based plan using NDMA guidelines.
+      </div>
+
+      <div class="modal-field">
+        <label for="api-key-input">Gemini API Key</label>
+        <input
+          type="password"
+          id="api-key-input"
+          placeholder="AIza..."
+          autocomplete="off"
+          style="letter-spacing:0.1em"
+        >
+      </div>
+
+      <div class="modal-actions">
+        <button class="btn btn-secondary" onclick="closeSettings()">Cancel</button>
+        <button class="btn btn-primary" onclick="saveSettings()">💾 Save Key</button>
+      </div>
+
+      <p style="margin-top:16px; font-size:0.75rem; color:var(--text-muted); text-align:center">
+        HeatShield AI — Hackathon MVP &nbsp;·&nbsp; Preparedness guidance only &nbsp;·&nbsp; Not medical advice
+      </p>
+    </div>
+  </div>
+
+
+  <!-- ══════════════════════════════════════════════════════════
+       TOAST NOTIFICATION CONTAINER
+  ════════════════════════════════════════════════════════════ -->
+  <div id="toast-container" aria-live="polite" aria-atomic="true"></div>
+
+
+  <!-- ══════════════════════════════════════════════════════════
+       SCRIPTS (load order matters — dependencies first)
+  ════════════════════════════════════════════════════════════ -->
+  <!-- Data -->
+  <script src="data/guidance.js"></script>
+
+  <!-- Core modules (no inter-module dependencies) -->
+  <script src="js/vulnerability.js"></script>
+  <script src="js/heatwave.js"></script>
+
+  <!-- Feature modules -->
+  <script src="js/ai.js"></script>
+  <script src="js/card.js"></script>
+  <script src="js/profile.js"></script>
+
+  <!-- App controller (ties everything together — must be last) -->
+  <script src="js/app.js"></script>
+
+</body>
+</html>
