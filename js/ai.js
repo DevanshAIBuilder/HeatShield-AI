@@ -12,6 +12,34 @@
 const GEMINI_MODEL = 'gemini-2.0-flash';
 const GEMINI_API_BASE = 'https://generativelanguage.googleapis.com/v1beta/models';
 
+function validateHomeScanResult(value) {
+  if (!value || !Array.isArray(value.detected_features)) return null;
+  const allowed = ['ceiling_fan', 'cooler', 'ac', 'windows', 'visible_shading', 'visible_water_storage', 'room_environment'];
+  const features = value.detected_features.filter((item) => item && allowed.includes(item.feature) && typeof item.detected === 'boolean')
+    .map((item) => ({ feature: item.feature, detected: item.detected, confidence: ['high', 'medium', 'low'].includes(item.confidence) ? item.confidence : 'low' }));
+  return { detected_features: features };
+}
+
+async function analyzeHomeScan(apiKey, base64Image, mimeType) {
+  if (!apiKey) return { success: false, error: 'Add a Gemini API key in Settings to run the optional vision prototype.' };
+  const prompt = `Analyze only observable household/environment features in this image. Do not infer age, medical conditions, disability, health status, identity, or any sensitive personal information. Return only JSON in this shape: {"detected_features":[{"feature":"ceiling_fan|cooler|ac|windows|visible_shading|visible_water_storage|room_environment","detected":true,"confidence":"high|medium|low"}]}. Include only features visibly supported by the image.`;
+  try {
+    const response = await fetch(`${GEMINI_API_BASE}/${GEMINI_MODEL}:generateContent?key=${apiKey.trim()}`, {
+      method: 'POST', headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ contents: [{ parts: [{ text: prompt }, { inline_data: { mime_type: mimeType, data: base64Image } }] }], generationConfig: { temperature: 0, maxOutputTokens: 512 } }),
+    });
+    if (!response.ok) throw new Error(`Vision API HTTP ${response.status}`);
+    const data = await response.json();
+    const rawText = data?.candidates?.[0]?.content?.parts?.[0]?.text || '';
+    const match = rawText.match(/```json\s*([\s\S]*?)```/) || rawText.match(/({[\s\S]*})/);
+    const parsed = validateHomeScanResult(JSON.parse(match ? (match[1] || match[0]) : rawText));
+    if (!parsed) throw new Error('Vision response did not match the expected structure.');
+    return { success: true, result: parsed };
+  } catch (error) {
+    return { success: false, error: error.message };
+  }
+}
+
 /**
  * Build the structured prompt for Gemini.
  */

@@ -219,6 +219,7 @@ body::before {
 /* ── Pages ─────────────────────────────────────────────────── */
 .page { display: none; animation: fadeIn 0.35s ease; }
 .page.active { display: block; }
+.hidden { display: none !important; }
 
 @keyframes fadeIn {
   from { opacity: 0; transform: translateY(12px); }
@@ -401,6 +402,25 @@ h4 { font-size: 1rem; font-weight: 600; }
   gap: 10px;
   align-items: flex-start;
 }
+
+.status-card { display:flex; align-items:center; justify-content:space-between; gap:18px; text-align:left; padding:20px 24px; margin:24px 0 16px; border:1px solid var(--glass-border); border-left:4px solid var(--accent-orange); background:rgba(249,115,22,0.08); }
+.status-card h3 { margin:4px 0; }
+.status-card p { color:var(--text-secondary); margin:2px 0; }
+.status-card small { color:var(--text-muted); }
+.risk-status-low { border-left-color:var(--success); }
+.risk-status-moderate { border-left-color:var(--warning); }
+.risk-status-high, .risk-status-critical { border-left-color:var(--danger); }
+.status-kicker { color:var(--accent-orange); font-size:0.72rem; font-weight:800; letter-spacing:0.1em; text-transform:uppercase; }
+.saved-profile-status { color:var(--success); font-size:0.82rem; padding:10px 14px; margin:10px 0 16px; background:var(--success-bg); border:1px solid rgba(34,197,94,0.25); border-radius:var(--radius-sm); }
+.offline-banner { display:flex; gap:10px; padding:12px 16px; margin-bottom:16px; border:1px solid rgba(234,179,8,0.3); border-radius:var(--radius-md); background:var(--warning-bg); color:var(--warning); font-size:0.84rem; }
+.offline-banner span { color:var(--text-secondary); }
+.home-tools { text-align:left; }
+.home-tools input[type="file"] { width:100%; margin:16px 0 8px; color:var(--text-secondary); }
+.scan-disclaimer { color:var(--text-muted); font-size:0.76rem; margin-top:12px; }
+.scan-results { margin-top:12px; border-top:1px solid var(--glass-border); padding-top:12px; }
+.scan-feature { display:flex; justify-content:space-between; align-items:center; gap:12px; padding:9px 0; border-bottom:1px solid var(--glass-border); font-size:0.86rem; }
+.scan-feature small { color:var(--text-muted); }
+.scan-action { padding:5px 10px; font-size:0.75rem; margin-left:6px; }
 
 /* ── Profile Form ──────────────────────────────────────────── */
 .page-header {
@@ -1165,6 +1185,9 @@ input[type="checkbox"].toggle-input:checked::after {
   .page-actions { flex-direction: column; }
   .weather-stats-grid { grid-template-columns: repeat(2, 1fr); }
   #step-indicator { display: none; }
+  .status-card { align-items:stretch; flex-direction:column; }
+  .offline-banner { flex-direction:column; gap:2px; }
+  .scan-feature { align-items:flex-start; flex-direction:column; }
 }
 
 @media (max-width: 480px) {

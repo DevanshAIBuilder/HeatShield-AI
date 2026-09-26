@@ -54,6 +54,9 @@
        MAIN APP
   ════════════════════════════════════════════════════════════ -->
   <main id="app-main">
+    <div id="offline-status" class="offline-banner hidden" role="status">
+      <strong>Offline Mode</strong><span>Your saved household profile and last preparedness plan are still available.</span>
+    </div>
 
     <!-- ─── PAGE 1: HOME ──────────────────────────────────── -->
     <section id="page-home" class="page active" aria-label="Home page">
@@ -76,9 +79,24 @@
           <button class="btn btn-primary btn-lg" id="start-btn" onclick="navigateTo('profile'); initProfileForm()">
             🏠 Create Household Profile
           </button>
+          <button class="btn btn-secondary" onclick="enableBrowserAlerts()">🔔 Enable HeatShield Alerts</button>
           <a href="https://sachet.ndma.gov.in/DosDont" target="_blank" rel="noopener" class="btn btn-secondary">
             📋 NDMA Guidelines ↗
           </a>
+        </div>
+
+        <div id="home-status" aria-live="polite"></div>
+
+        <div class="glass-card home-tools">
+          <div>
+            <span class="status-kicker">Optional prototype</span>
+            <h3>📷 AI Home Scan</h3>
+            <p class="text-muted">Upload one household image or a short video frame to suggest observable cooling and environment features.</p>
+          </div>
+          <input type="file" id="home-scan-input" accept="image/*,video/*" onchange="handleHomeScanUpload(event)">
+          <div id="home-scan-result" aria-live="polite"></div>
+          <p class="scan-disclaimer">AI suggestions require user confirmation. The scan does not infer age, medical conditions, disability, health status, or other sensitive information.</p>
+          <p class="scan-disclaimer">WhatsApp alerts — Coming soon. Production requires WhatsApp Business / Cloud API, a backend service, a verified sender, user opt-in, and network connectivity.</p>
         </div>
 
         <div class="demo-info">
@@ -155,6 +173,7 @@
       </div>
 
       <form id="profile-form" novalidate>
+        <div id="profile-saved-status" class="saved-profile-status hidden" role="status"></div>
 
         <!-- Section: Identification -->
         <div class="form-section">
@@ -286,6 +305,8 @@
 
         <div class="page-actions">
           <button type="button" class="btn btn-secondary" onclick="navigateTo('home')">← Back to Home</button>
+                    <button type="button" class="btn btn-secondary" onclick="editProfile()">Edit Profile</button>
+          <button type="button" class="btn btn-secondary hidden" id="reset-profile-btn" onclick="resetHouseholdProfile()">Reset Household Profile</button>
           <button type="submit" class="btn btn-primary" id="analyse-btn">
             ⚡ Analyse Vulnerability →
           </button>

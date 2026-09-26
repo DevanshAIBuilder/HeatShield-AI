@@ -4,16 +4,195 @@
  */
 
 // ── Global App State ─────────────────────────────────────────────────────────
+const STORAGE_KEYS = {
+  profile: 'heatshield_household_profile',
+  plan: 'heatshield_last_plan',
+  risk: 'heatshield_last_risk_result',
+  safetyCard: 'heatshield_last_safety_card',
+};
+
+const safeStorage = {
+  get(key) { try { return window.localStorage.getItem(key); } catch (error) { return null; } },
+  set(key, value) { try { window.localStorage.setItem(key, value); return true; } catch (error) { return false; } },
+  remove(key) { try { window.localStorage.removeItem(key); return true; } catch (error) { return false; } },
+};
+
+function readStoredJson(key) {
+  const value = safeStorage.get(key);
+  if (!value) return null;
+  try { return JSON.parse(value); } catch (error) { return null; }
+}
+
 const AppState = {
   currentPage: 'home',
-  profile: null,
-  vulnerabilityResult: null,
+  profile: readStoredJson(STORAGE_KEYS.profile),
+  vulnerabilityResult: readStoredJson(STORAGE_KEYS.risk),
   heatwaveContext: null,
-  aiPlan: null,
-  safetyCardDataUrl: null,
-  apiKey: localStorage.getItem('heatshield_api_key') || '',
+  aiPlan: readStoredJson(STORAGE_KEYS.plan),
+  safetyCardDataUrl: safeStorage.get(STORAGE_KEYS.safetyCard),
+  apiKey: safeStorage.get('heatshield_api_key') || '',
   checklist: {}, // { checklistItemId: boolean }
 };
+
+const NotificationService = {
+  inApp(message, type = 'info') { showToast(message, type); },
+  async browserPush(title, body) {
+    if (!('Notification' in window)) return { success: false, message: 'Browser notifications are not supported here.' };
+    if (Notification.permission === 'default') await Notification.requestPermission();
+    if (Notification.permission !== 'granted') return { success: false, message: 'Browser notification permission was not granted.' };
+    new Notification(title, { body });
+    return { success: true };
+  },
+  whatsapp() { return { success: false, message: 'WhatsApp alerts — Coming soon' }; },
+};
+
+function persistState() {
+  if (AppState.profile) safeStorage.set(STORAGE_KEYS.profile, JSON.stringify(AppState.profile));
+  if (AppState.vulnerabilityResult) safeStorage.set(STORAGE_KEYS.risk, JSON.stringify(AppState.vulnerabilityResult));
+  if (AppState.aiPlan) safeStorage.set(STORAGE_KEYS.plan, JSON.stringify(AppState.aiPlan));
+  if (AppState.safetyCardDataUrl) safeStorage.set(STORAGE_KEYS.safetyCard, AppState.safetyCardDataUrl);
+}
+
+function getProactiveAlert() {
+  const result = AppState.vulnerabilityResult;
+  if (!result) return null;
+  const messages = {
+    Low: 'Heat conditions currently require routine preparedness.',
+    Moderate: 'Heat risk detected. Review your household preparedness actions.',
+    High: 'High heat risk detected. Review your household preparedness actions.',
+    Critical: 'Critical heat risk detected. Review priority preparedness actions immediately.',
+  };
+  return { level: result.riskLevel, message: messages[result.riskLevel] || messages.Moderate, factors: result.detectedFactors.length };
+}
+
+function renderHomeStatus() {
+  const container = document.getElementById('home-status');
+  if (!container) return;
+  const alert = getProactiveAlert();
+  if (!AppState.profile || !alert) {
+    container.innerHTML = '<div class="glass-card status-card"><strong>Start with your household profile</strong><p class="text-muted">Your saved profile will power a household-specific heat risk check.</p></div>';
+    return;
+  }
+  const context = AppState.heatwaveContext || getHeatwaveContext(AppState.profile.city);
+  AppState.heatwaveContext = context;
+  container.innerHTML = `
+    <div class="status-card risk-status-${alert.level.toLowerCase()}">
+      <div><span class="status-kicker">HeatShield Alert</span><h3>${alert.message}</h3>
+      <p>${alert.factors} vulnerability factor${alert.factors === 1 ? '' : 's'} identified for ${AppState.profile.householdName || 'your household'}.</p>
+      <small>Demo Heatwave Context · ${context.city} · ${context.alertMeta.label}</small></div>
+      <button class="btn btn-primary" onclick="navigateTo('vulnerability'); renderVulnerabilityPage()">View Preparedness Plan →</button>
+    </div>
+    <div class="saved-profile-status">✓ Household profile saved · Welcome back — your saved household profile has been loaded.</div>`;
+}
+
+function enableBrowserAlerts() {
+  NotificationService.browserPush('HeatShield AI', 'Your household heat preparedness alert is ready.')
+    .then((result) => NotificationService.inApp(result.success ? 'Browser alerts enabled.' : result.message, result.success ? 'success' : 'warning'));
+}
+
+function resetHouseholdProfile() {
+  if (!window.confirm('Reset the saved household profile and start fresh?')) return;
+  Object.values(STORAGE_KEYS).forEach((key) => safeStorage.remove(key));
+  AppState.profile = null;
+  AppState.vulnerabilityResult = null;
+  AppState.aiPlan = null;
+  AppState.safetyCardDataUrl = null;
+  AppState.heatwaveContext = null;
+  const form = document.getElementById('profile-form');
+  if (form) form.reset();
+  const savedStatus = document.getElementById('profile-saved-status');
+  if (savedStatus) savedStatus.classList.add('hidden');
+  const resetButton = document.getElementById('reset-profile-btn');
+  if (resetButton) resetButton.classList.add('hidden');
+  renderHomeStatus();
+  navigateTo('home');
+  NotificationService.inApp('Household profile reset.', 'info');
+}
+
+function hydrateSavedHousehold() {
+  if (!AppState.profile) return;
+  AppState.heatwaveContext = getHeatwaveContext(AppState.profile.city);
+  AppState.vulnerabilityResult = calculateVulnerability(AppState.profile);
+  persistState();
+}
+
+function renderOfflineStatus() {
+  const container = document.getElementById('offline-status');
+  if (!container) return;
+  container.classList.toggle('hidden', navigator.onLine);
+}
+
+function readScanMedia(file) {
+  return new Promise((resolve, reject) => {
+    if (file.type.startsWith('image/')) {
+      const reader = new FileReader();
+      reader.onload = () => resolve({ base64: String(reader.result).split(',')[1], mimeType: file.type });
+      reader.onerror = () => reject(new Error('Could not read the image.'));
+      reader.readAsDataURL(file);
+      return;
+    }
+    if (!file.type.startsWith('video/')) { reject(new Error('Please choose an image or video file.')); return; }
+    const video = document.createElement('video');
+    video.muted = true;
+    video.src = URL.createObjectURL(file);
+    video.onloadeddata = () => {
+      video.currentTime = Math.min(0.5, video.duration || 0);
+      video.onseeked = () => {
+        const canvas = document.createElement('canvas');
+        canvas.width = video.videoWidth;
+        canvas.height = video.videoHeight;
+        canvas.getContext('2d').drawImage(video, 0, 0);
+        URL.revokeObjectURL(video.src);
+        resolve({ base64: canvas.toDataURL('image/jpeg').split(',')[1], mimeType: 'image/jpeg' });
+      };
+    };
+    video.onerror = () => reject(new Error('Could not read a frame from the video.'));
+  });
+}
+
+function homeScanLabel(feature) {
+  return { ceiling_fan: 'Ceiling fan', cooler: 'Cooler', ac: 'AC', windows: 'Windows', visible_shading: 'Visible shading', visible_water_storage: 'Visible water storage', room_environment: 'Room/environment' }[feature] || feature;
+}
+
+function renderHomeScanResult(scan) {
+  const container = document.getElementById('home-scan-result');
+  if (!container) return;
+  window.homeScanResult = scan;
+  container.innerHTML = `<div class="scan-results"><strong>Detected Observable Features</strong>${scan.detected_features.map((item, index) => `
+    <div class="scan-feature"><span>${item.detected ? '✓' : '?'} ${homeScanLabel(item.feature)} <small>(${item.confidence} confidence)</small></span>
+    <span><button class="btn btn-secondary scan-action" onclick="applyHomeScanFeature(${index})">Confirm</button><button class="btn btn-secondary scan-action" onclick="rejectHomeScanFeature(${index})">Reject</button></span></div>`).join('')}</div>`;
+}
+
+function applyHomeScanFeature(index) {
+  const item = window.homeScanResult?.detected_features?.[index];
+  if (!item || !AppState.profile) { NotificationService.inApp('Create a household profile before applying scan suggestions.', 'warning'); return; }
+  if (item.feature === 'ceiling_fan' || item.feature === 'cooler') AppState.profile.hasFanCooler = item.detected;
+  if (item.feature === 'ac') AppState.profile.hasAC = item.detected;
+  AppState.vulnerabilityResult = calculateVulnerability(AppState.profile);
+  persistState();
+  renderHomeStatus();
+  NotificationService.inApp(`${homeScanLabel(item.feature)} suggestion applied. Review your profile to confirm other details.`, 'success');
+}
+
+function rejectHomeScanFeature(index) {
+  const item = window.homeScanResult?.detected_features?.[index];
+  if (item) NotificationService.inApp(`${homeScanLabel(item.feature)} suggestion rejected.`, 'info');
+}
+
+async function handleHomeScanUpload(event) {
+  const file = event.target.files?.[0];
+  const container = document.getElementById('home-scan-result');
+  if (!file || !container) return;
+  container.innerHTML = '<p class="text-muted">Analysing observable features…</p>';
+  try {
+    const media = await readScanMedia(file);
+    const response = await analyzeHomeScan(AppState.apiKey, media.base64, media.mimeType);
+    if (!response.success) throw new Error(response.error);
+    renderHomeScanResult(response.result);
+  } catch (error) {
+    container.innerHTML = `<p class="text-muted">Home Scan unavailable: ${error.message}</p>`;
+  }
+}
 
 const PAGES = ['home', 'profile', 'vulnerability', 'heatwave', 'ai-analysis', 'plan', 'card'];
 const PAGE_LABELS = {
@@ -68,7 +247,7 @@ function saveSettings() {
   const input = document.getElementById('api-key-input');
   if (input) {
     AppState.apiKey = input.value.trim();
-    localStorage.setItem('heatshield_api_key', AppState.apiKey);
+    safeStorage.set('heatshield_api_key', AppState.apiKey);
     showToast(AppState.apiKey ? '✅ API key saved' : '⚠️ API key cleared — rule-based fallback will be used', AppState.apiKey ? 'success' : 'warning');
     closeSettings();
   }
@@ -147,7 +326,7 @@ function renderVulnerabilityPage() {
       <span>📋</span>
       <div>
         <strong>Scoring methodology</strong> based on NDMA India and WHO heat vulnerability frameworks.
-        <a href="https://ndma.gov.in/Natural-Hazard/Heat-Wave" target="_blank" rel="noopener">NDMA Heat Wave Guidelines ↗</a>
+        <a href="https://sachet.ndma.gov.in/DosDont" target="_blank" rel="noopener">NDMA Heat Wave Guidelines ↗</a>
       </div>
     </div>
 
@@ -275,6 +454,7 @@ async function startAIAnalysis() {
   );
 
   AppState.aiPlan = result.plan;
+  persistState();
 
   if (!result.success && result.error) {
     showToast(`⚠️ Gemini API error: ${result.error} — rule-based plan used instead.`, 'warning');
@@ -429,7 +609,7 @@ function renderPlanPage() {
       <span>📋</span>
       <div>
         Public guidance sources:
-        <a href="https://ndma.gov.in/Natural-Hazard/Heat-Wave" target="_blank" rel="noopener">NDMA Heat Wave Guidelines</a> •
+        <a href="https://sachet.ndma.gov.in/DosDont" target="_blank" rel="noopener">NDMA Heat Wave Guidelines</a> •
         <a href="https://mausam.imd.gov.in" target="_blank" rel="noopener">IMD Heat Advisories</a>
       </div>
     </div>
@@ -480,6 +660,7 @@ function renderCardPage() {
     AppState.aiPlan
   );
   AppState.safetyCardDataUrl = dataUrl;
+  persistState();
 
   container.innerHTML = `
     <div class="card-preview-wrapper">
@@ -566,6 +747,7 @@ function showToast(message, type = 'info') {
 
 // ── Init ──────────────────────────────────────────────────────────────────────
 document.addEventListener('DOMContentLoaded', () => {
+    hydrateSavedHousehold();
   // Settings button
   const settingsBtn = document.getElementById('settings-btn');
   if (settingsBtn) settingsBtn.addEventListener('click', openSettings);
@@ -580,6 +762,10 @@ document.addEventListener('DOMContentLoaded', () => {
   });
 
   updateStepIndicator();
+  renderHomeStatus();
+  renderOfflineStatus();
+  window.addEventListener('online', renderOfflineStatus);
+  window.addEventListener('offline', renderOfflineStatus);
   console.log('🔥 HeatShield AI initialised');
   console.log('API key status:', AppState.apiKey ? 'Present' : 'Not set (using fallback)');
 });

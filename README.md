@@ -96,7 +96,7 @@ Fill the profile with:
 | AI Integration | Google Gemini 2.0 Flash API |
 | Heatwave Data | Seeded demo data (10 Indian cities, IMD format) |
 | Safety Card | HTML Canvas → PNG download |
-| Storage | Browser localStorage (API key only) |
+| Storage | Browser localStorage (profile, last risk, plan and Safety Card; API key remains separate) |
 | Dependencies | Zero — no npm, no build, no server |
 
 ### File Structure
@@ -153,6 +153,22 @@ All guidance is sourced from publicly available materials:
 Heatwave context data is seeded for demo purposes. Production deployment would use live IMD/OpenMeteo APIs (hooks are in `js/heatwave.js`).
 
 ---
+
+## Proactive MVP Features
+
+- Saved household profiles use `heatshield_household_profile`; reload recalculates risk from the saved profile and seeded **Demo Heatwave Context**.
+- Home shows an in-app risk alert and offers optional browser notifications after explicit user action. Browser notifications are not offline emergency alerts.
+- Last risk, plan and Safety Card data are retained locally. When disconnected, the app shows **Offline Mode** and keeps saved data available; new live alerts are not generated offline.
+- **AI Home Scan** is an optional Gemini vision prototype. It only suggests observable features, validates JSON, and requires confirmation before updating cooling fields. It never infers sensitive household or health information.
+- WhatsApp is intentionally not integrated in the static MVP: `NotificationService.whatsapp()` is a future adapter.
+
+Production profile sync architecture:
+
+```text
+Frontend -> Authentication -> Backend API -> Supabase/PostgreSQL -> Household Profile
+```
+
+Production WhatsApp delivery requires WhatsApp Business / Cloud API credentials kept on the backend, a verified sender, explicit opt-in, and network connectivity.
 
 ## Key Constraints Honoured
 

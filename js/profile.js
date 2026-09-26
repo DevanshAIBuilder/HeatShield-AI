@@ -22,6 +22,7 @@ function initProfileForm() {
   // If we have existing profile data, pre-fill the form
   if (AppState.profile) {
     populateForm(AppState.profile);
+    renderProfileSavedState();
   }
 
   form.addEventListener('submit', (e) => {
@@ -33,6 +34,22 @@ function initProfileForm() {
   form.querySelectorAll('input, select').forEach((el) => {
     el.addEventListener('change', () => clearError(el.id));
   });
+}
+
+function renderProfileSavedState() {
+  const status = document.getElementById('profile-saved-status');
+  const reset = document.getElementById('reset-profile-btn');
+  if (status && AppState.profile) {
+    status.classList.remove('hidden');
+    status.textContent = '✓ Household profile saved · Welcome back — your saved household profile has been loaded.';
+  }
+  if (reset) reset.classList.remove('hidden');
+}
+
+function editProfile() {
+  navigateTo('profile');
+  initProfileForm();
+  renderProfileSavedState();
 }
 
 function populateForm(profile) {
@@ -135,6 +152,9 @@ function handleProfileSubmit() {
   // Save profile and compute vulnerability
   AppState.profile = profile;
   AppState.vulnerabilityResult = calculateVulnerability(profile);
+  AppState.heatwaveContext = getHeatwaveContext(profile.city);
+  persistState();
+  renderHomeStatus();
 
   // Navigate to vulnerability page and render it
   navigateTo('vulnerability');

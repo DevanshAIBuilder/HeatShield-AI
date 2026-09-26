@@ -8,7 +8,7 @@
 const GUIDANCE = {
   source: {
     name: 'NDMA India / IMD Heat Action Plan',
-    url: 'https://ndma.gov.in/Natural-Hazard/Heat-Wave',
+    url: '<a href="https://sachet.ndma.gov.in/DosDont"',
     imdUrl: 'https://mausam.imd.gov.in',
     disclaimer: 'This guidance is based on publicly available NDMA and IMD heat preparedness advisories and is for preparedness purposes only — not medical advice.',
   },
