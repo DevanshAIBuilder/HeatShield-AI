@@ -222,7 +222,7 @@ function renderHeatwavePage() {
         <a href="https://mausam.imd.gov.in" target="_blank" rel="noopener" class="source-link">
           🌐 IMD — India Meteorological Department ↗
         </a>
-        <a href="https://ndma.gov.in/Natural-Hazard/Heat-Wave" target="_blank" rel="noopener" class="source-link">
+        <a href="https://sachet.ndma.gov.in/DosDont" target="_blank" rel="noopener" class="source-link">
           🛡️ NDMA — Heat Wave Guidelines ↗
         </a>
         <a href="https://open-meteo.com" target="_blank" rel="noopener" class="source-link">
