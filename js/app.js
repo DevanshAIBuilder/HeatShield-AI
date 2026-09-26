@@ -232,6 +232,7 @@ function updateStepIndicator() {
 function openSettings() {
   const modal = document.getElementById('settings-modal');
   if (modal) {
+    AppState.apiKey = safeStorage.get('heatshield_api_key') || AppState.apiKey || '';
     modal.classList.add('open');
     const input = document.getElementById('api-key-input');
     if (input) input.value = AppState.apiKey;
