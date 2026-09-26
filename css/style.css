@@ -510,7 +510,6 @@ select.field-error {
   margin-top: 2px;
 }
 
-.field-error-msg.hidden { display: none; }
 
 /* Checkbox toggle */
 .checkbox-row {
@@ -962,7 +961,6 @@ input[type="checkbox"].toggle-input:checked::after {
   color: var(--text-primary);
 }
 
-.plan-tab-content.hidden { display: none; }
 
 .action-phase { margin-bottom: 12px; }
 
@@ -1191,7 +1189,6 @@ input[type="checkbox"].toggle-input:checked::after {
 }
 
 @media (max-width: 480px) {
-  .weather-stats-grid { grid-template-columns: repeat(2, 1fr); }
   .vuln-summary-grid { grid-template-columns: repeat(3, 1fr); gap: 8px; }
 }
 

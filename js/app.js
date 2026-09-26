@@ -521,7 +521,7 @@ function renderPlanPage() {
   const container = document.getElementById('plan-content');
   if (!container) return;
 
-  function actionList(actions, phase) {
+  function actionList(actions) {
     return (actions || []).map((a, i) => `
       <div class="action-item">
         <span class="action-num">${i + 1}</span>
@@ -530,7 +530,7 @@ function renderPlanPage() {
     `).join('');
   }
 
-  function checklistSection(title, items, phaseKey) {
+  function checklistSection(title, items) {
     return `
       <div class="checklist-group glass-card">
         <h4 class="checklist-title">${title}</h4>
@@ -559,9 +559,9 @@ function renderPlanPage() {
         </div>`;
     }).join('');
 
-  const totalItems = Object.keys(CHECKLIST_ITEMS.immediate).length +
-    Object.keys(CHECKLIST_ITEMS.beforeHeatwave).length +
-    Object.keys(CHECKLIST_ITEMS.duringHeatwave).length;
+  const totalItems = CHECKLIST_ITEMS.immediate.length +
+    CHECKLIST_ITEMS.beforeHeatwave.length +
+    CHECKLIST_ITEMS.duringHeatwave.length;
   const checkedCount = Object.values(AppState.checklist).filter(Boolean).length;
 
   container.innerHTML = `
@@ -583,22 +583,22 @@ function renderPlanPage() {
     <div id="plan-tab-actions" class="plan-tab-content">
       <div class="action-phase glass-card">
         <h3 class="phase-title immediate-phase">⚡ Immediate Actions (Next 24 Hours)</h3>
-        ${actionList(plan.immediateActions, 'immediate')}
+        ${actionList(plan.immediateActions)}
       </div>
       <div class="action-phase glass-card">
         <h3 class="phase-title before-phase">📅 Before Heatwave</h3>
-        ${actionList(plan.beforeHeatwaveActions, 'before')}
+        ${actionList(plan.beforeHeatwaveActions)}
       </div>
       <div class="action-phase glass-card">
         <h3 class="phase-title during-phase">🌡️ During Heatwave</h3>
-        ${actionList(plan.duringHeatwaveActions, 'during')}
+        ${actionList(plan.duringHeatwaveActions)}
       </div>
     </div>
 
     <div id="plan-tab-checklist" class="plan-tab-content hidden">
-      ${checklistSection('⚡ Immediate (Do Today)', CHECKLIST_ITEMS.immediate, 'immediate')}
-      ${checklistSection('📅 Before Heatwave', CHECKLIST_ITEMS.beforeHeatwave, 'before')}
-      ${checklistSection('🌡️ During Heatwave', CHECKLIST_ITEMS.duringHeatwave, 'during')}
+      ${checklistSection('⚡ Immediate (Do Today)', CHECKLIST_ITEMS.immediate)}
+      ${checklistSection('📅 Before Heatwave', CHECKLIST_ITEMS.beforeHeatwave)}
+      ${checklistSection('🌡️ During Heatwave', CHECKLIST_ITEMS.duringHeatwave)}
     </div>
 
     ${specialCards ? `
@@ -768,5 +768,4 @@ document.addEventListener('DOMContentLoaded', () => {
   window.addEventListener('online', renderOfflineStatus);
   window.addEventListener('offline', renderOfflineStatus);
   console.log('🔥 HeatShield AI initialised');
-  console.log('API key status:', AppState.apiKey ? 'Present' : 'Not set (using fallback)');
 });

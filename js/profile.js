@@ -8,10 +8,9 @@ function initProfileForm() {
   const form = document.getElementById('profile-form');
   if (!form) return;
 
-  // Populate city suggestions
-  const cityInput = document.getElementById('field-city');
+  // Populate city suggestions once.
   const cityList = document.getElementById('city-datalist');
-  if (cityList) {
+  if (cityList && cityList.children.length === 0) {
     AVAILABLE_CITIES.forEach((c) => {
       const opt = document.createElement('option');
       opt.value = c;
@@ -25,6 +24,8 @@ function initProfileForm() {
     renderProfileSavedState();
   }
 
+  if (form.dataset.initialized === 'true') return;
+
   form.addEventListener('submit', (e) => {
     e.preventDefault();
     handleProfileSubmit();
@@ -34,6 +35,7 @@ function initProfileForm() {
   form.querySelectorAll('input, select').forEach((el) => {
     el.addEventListener('change', () => clearError(el.id));
   });
+  form.dataset.initialized = 'true';
 }
 
 function renderProfileSavedState() {
