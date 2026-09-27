@@ -159,6 +159,8 @@ Heatwave context data is seeded for demo purposes. Production deployment would u
 - Saved household profiles use `heatshield_household_profile`; reload recalculates risk from the saved profile and seeded **Demo Heatwave Context**.
 - Home shows an in-app risk alert and offers optional browser notifications after explicit user action. Browser notifications are not offline emergency alerts.
 - Last risk, plan and Safety Card data are retained locally. When disconnected, the app shows **Offline Mode** and keeps saved data available; new live alerts are not generated offline.
+- The app is an installable offline-first PWA. The application shell is served from a versioned service-worker cache, and notification clicks focus the open app or open the cached Action Plan route.
+- Offline screens label alerts as **Last known information** with their saved update time. A disconnected device cannot receive new weather or emergency alerts; production emergency delivery would require SMS, cellular broadcast, or telecom/government emergency-alert infrastructure.
 - **AI Home Scan** is an optional Gemini vision prototype. It only suggests observable features, validates JSON, and requires confirmation before updating cooling fields. It never infers sensitive household or health information.
 - WhatsApp is intentionally not integrated in the static MVP: `NotificationService.whatsapp()` is a future adapter.
 
@@ -176,6 +178,7 @@ Production WhatsApp delivery requires WhatsApp Business / Cloud API credentials 
 - ✅ All AI output clearly labelled as preparedness guidance, not medical advice
 - ✅ Disclaimer shown at every output stage
 - ✅ Works fully offline (rule-based fallback)
+- ✅ Offline-first PWA shell with cached profile, risk result, heatwave context, plan, checklist, alert metadata and Safety Card
 - ✅ No external dependencies — opens as a static HTML file
 - ✅ Emergency contacts (112, 108, 1078) displayed throughout
 - ✅ Sources cited on every guidance page

@@ -155,7 +155,11 @@ function handleProfileSubmit() {
   AppState.profile = profile;
   AppState.vulnerabilityResult = calculateVulnerability(profile);
   AppState.heatwaveContext = getHeatwaveContext(profile.city);
+  updateLastAlert();
   persistState();
+  if (window.Notification && Notification.permission === 'granted' && ['High', 'Critical'].includes(AppState.vulnerabilityResult.riskLevel)) {
+    showHeatShieldAlert();
+  }
   renderHomeStatus();
 
   // Navigate to vulnerability page and render it

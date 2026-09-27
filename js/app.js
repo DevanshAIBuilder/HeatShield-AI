@@ -9,6 +9,10 @@ const STORAGE_KEYS = {
   plan: 'heatshield_last_plan',
   risk: 'heatshield_last_risk_result',
   safetyCard: 'heatshield_last_safety_card',
+  heatwave: 'heatshield_last_heatwave_context',
+  checklist: 'heatshield_last_checklist',
+  alert: 'heatshield_last_alert',
+  updatedAt: 'heatshield_last_updated_at',
 };
 
 const safeStorage = {
@@ -27,11 +31,13 @@ const AppState = {
   currentPage: 'home',
   profile: readStoredJson(STORAGE_KEYS.profile),
   vulnerabilityResult: readStoredJson(STORAGE_KEYS.risk),
-  heatwaveContext: null,
+  heatwaveContext: readStoredJson(STORAGE_KEYS.heatwave),
   aiPlan: readStoredJson(STORAGE_KEYS.plan),
   safetyCardDataUrl: safeStorage.get(STORAGE_KEYS.safetyCard),
   apiKey: safeStorage.get('heatshield_api_key') || '',
-  checklist: {}, // { checklistItemId: boolean }
+  checklist: readStoredJson(STORAGE_KEYS.checklist) || {},
+  lastAlert: readStoredJson(STORAGE_KEYS.alert),
+  lastUpdatedAt: safeStorage.get(STORAGE_KEYS.updatedAt),
 };
 
 const NotificationService = {
@@ -40,7 +46,13 @@ const NotificationService = {
     if (!('Notification' in window)) return { success: false, message: 'Browser notifications are not supported here.' };
     if (Notification.permission === 'default') await Notification.requestPermission();
     if (Notification.permission !== 'granted') return { success: false, message: 'Browser notification permission was not granted.' };
-    new Notification(title, { body });
+    const options = { body, icon: './assets/heatshield-icon.svg', badge: './assets/heatshield-icon.svg', tag: 'heatshield-alert', renotify: false };
+    if ('serviceWorker' in navigator) {
+      const registration = await navigator.serviceWorker.ready;
+      await registration.showNotification(title, options);
+    } else {
+      new Notification(title, options);
+    }
     return { success: true };
   },
   whatsapp() { return { success: false, message: 'WhatsApp alerts — Coming soon' }; },
@@ -49,8 +61,13 @@ const NotificationService = {
 function persistState() {
   if (AppState.profile) safeStorage.set(STORAGE_KEYS.profile, JSON.stringify(AppState.profile));
   if (AppState.vulnerabilityResult) safeStorage.set(STORAGE_KEYS.risk, JSON.stringify(AppState.vulnerabilityResult));
+  if (AppState.heatwaveContext) safeStorage.set(STORAGE_KEYS.heatwave, JSON.stringify(AppState.heatwaveContext));
   if (AppState.aiPlan) safeStorage.set(STORAGE_KEYS.plan, JSON.stringify(AppState.aiPlan));
   if (AppState.safetyCardDataUrl) safeStorage.set(STORAGE_KEYS.safetyCard, AppState.safetyCardDataUrl);
+  safeStorage.set(STORAGE_KEYS.checklist, JSON.stringify(AppState.checklist));
+  if (AppState.lastAlert) safeStorage.set(STORAGE_KEYS.alert, JSON.stringify(AppState.lastAlert));
+  AppState.lastUpdatedAt = new Date().toISOString();
+  safeStorage.set(STORAGE_KEYS.updatedAt, AppState.lastUpdatedAt);
 }
 
 function getProactiveAlert() {
@@ -65,6 +82,35 @@ function getProactiveAlert() {
   return { level: result.riskLevel, message: messages[result.riskLevel] || messages.Moderate, factors: result.detectedFactors.length };
 }
 
+function updateLastAlert() {
+  const alert = getProactiveAlert();
+  const context = AppState.heatwaveContext;
+  if (!alert || !context) return null;
+  AppState.lastAlert = {
+    title: 'HeatShield AI Alert',
+    message: alert.level === 'High' || alert.level === 'Critical'
+      ? 'High heat risk detected for your saved household. Tap to view your preparedness actions.'
+      : alert.message,
+    level: alert.level,
+    city: context.city,
+    timestamp: new Date().toISOString(),
+  };
+  return AppState.lastAlert;
+}
+
+function formatLastUpdated() {
+  if (!AppState.lastUpdatedAt) return 'No saved update yet.';
+  const date = new Date(AppState.lastUpdatedAt);
+  return Number.isNaN(date.getTime()) ? 'No saved update yet.' : date.toLocaleString('en-IN', { dateStyle: 'medium', timeStyle: 'short' });
+}
+
+async function showHeatShieldAlert() {
+  const alert = updateLastAlert();
+  if (!alert) return;
+  persistState();
+  await NotificationService.browserPush(alert.title, alert.message);
+}
+
 function renderHomeStatus() {
   const container = document.getElementById('home-status');
   if (!container) return;
@@ -75,6 +121,7 @@ function renderHomeStatus() {
   }
   const context = AppState.heatwaveContext || getHeatwaveContext(AppState.profile.city);
   AppState.heatwaveContext = context;
+  const knownInfo = !navigator.onLine ? `<div class="saved-profile-status"><strong>Last known information</strong><br>${AppState.lastAlert?.message || 'No saved alert yet.'}<br>Last updated: ${formatLastUpdated()}. Your saved preparedness actions are available.</div>` : '';
   container.innerHTML = `
     <div class="status-card risk-status-${alert.level.toLowerCase()}">
       <div><span class="status-kicker">HeatShield Alert</span><h3>${alert.message}</h3>
@@ -82,11 +129,18 @@ function renderHomeStatus() {
       <small>Demo Heatwave Context · ${context.city} · ${context.alertMeta.label}</small></div>
       <button class="btn btn-primary" onclick="navigateTo('vulnerability'); renderVulnerabilityPage()">View Preparedness Plan →</button>
     </div>
-    <div class="saved-profile-status">✓ Household profile saved · Welcome back — your saved household profile has been loaded.</div>`;
+    <div class="saved-profile-status">✓ Household profile saved · Welcome back — your saved household profile has been loaded.</div>${knownInfo}`;
 }
 
 function enableBrowserAlerts() {
-  NotificationService.browserPush('HeatShield AI', 'Your household heat preparedness alert is ready.')
+  updateLastAlert();
+  persistState();
+  const alert = getProactiveAlert();
+  const title = 'HeatShield AI Alert';
+  const body = alert?.level === 'High' || alert?.level === 'Critical'
+    ? 'High heat risk detected for your saved household. Tap to view your preparedness actions.'
+    : 'Your household heat preparedness alert is ready.';
+  NotificationService.browserPush(title, body)
     .then((result) => NotificationService.inApp(result.success ? 'Browser alerts enabled.' : result.message, result.success ? 'success' : 'warning'));
 }
 
@@ -111,15 +165,24 @@ function resetHouseholdProfile() {
 
 function hydrateSavedHousehold() {
   if (!AppState.profile) return;
-  AppState.heatwaveContext = getHeatwaveContext(AppState.profile.city);
+  if (navigator.onLine || !AppState.heatwaveContext) AppState.heatwaveContext = getHeatwaveContext(AppState.profile.city);
   AppState.vulnerabilityResult = calculateVulnerability(AppState.profile);
-  persistState();
+  if (navigator.onLine) {
+    updateLastAlert();
+    persistState();
+  }
 }
 
 function renderOfflineStatus() {
   const container = document.getElementById('offline-status');
   if (!container) return;
   container.classList.toggle('hidden', navigator.onLine);
+  const detail = document.getElementById('offline-last-known');
+  if (detail) detail.textContent = navigator.onLine
+    ? ''
+    : `Last known information: ${AppState.lastAlert?.message || 'No alert saved yet.'} Last updated: ${formatLastUpdated()}.`;
+  if (navigator.onLine && AppState.wasOffline) showToast('Back Online', 'success');
+  AppState.wasOffline = !navigator.onLine;
 }
 
 function readScanMedia(file) {
@@ -183,6 +246,10 @@ async function handleHomeScanUpload(event) {
   const file = event.target.files?.[0];
   const container = document.getElementById('home-scan-result');
   if (!file || !container) return;
+  if (!navigator.onLine) {
+    container.innerHTML = '<p class="text-muted">Home Scan requires an internet connection. Your saved preparedness data remains available offline.</p>';
+    return;
+  }
   container.innerHTML = '<p class="text-muted">Analysing observable features…</p>';
   try {
     const media = await readScanMedia(file);
@@ -423,6 +490,8 @@ function switchCity(city) {
   if (!AppState.profile) return;
   AppState.profile.city = city;
   AppState.heatwaveContext = getHeatwaveContext(city);
+  updateLastAlert();
+  persistState();
   renderHeatwavePage();
 }
 
@@ -432,7 +501,7 @@ async function startAIAnalysis() {
   const container = document.getElementById('ai-content');
   if (!container) return;
 
-  const hasKey = !!AppState.apiKey;
+  const hasKey = !!AppState.apiKey && navigator.onLine;
   container.innerHTML = `
     <div class="ai-loading">
       <div class="ai-spinner"></div>
@@ -447,12 +516,9 @@ async function startAIAnalysis() {
     </div>
   `;
 
-  const result = await generateAIPlan(
-    AppState.apiKey,
-    AppState.profile,
-    AppState.vulnerabilityResult,
-    AppState.heatwaveContext
-  );
+  const result = navigator.onLine
+    ? await generateAIPlan(AppState.apiKey, AppState.profile, AppState.vulnerabilityResult, AppState.heatwaveContext)
+    : { success: true, plan: generateFallbackPlan(AppState.profile, AppState.vulnerabilityResult, AppState.heatwaveContext), usedFallback: true };
 
   AppState.aiPlan = result.plan;
   persistState();
@@ -632,6 +698,7 @@ function switchPlanTab(tab, btn) {
 
 function toggleCheck(id, checked) {
   AppState.checklist[id] = checked;
+  persistState();
   updateChecklistProgress();
 }
 
@@ -748,7 +815,18 @@ function showToast(message, type = 'info') {
 
 // ── Init ──────────────────────────────────────────────────────────────────────
 document.addEventListener('DOMContentLoaded', () => {
-    hydrateSavedHousehold();
+  hydrateSavedHousehold();
+  if ('serviceWorker' in navigator) navigator.serviceWorker.register('./service-worker.js').catch((error) => console.warn('HeatShield service worker unavailable:', error));
+  navigator.serviceWorker?.addEventListener('message', (event) => {
+    if (event.data?.type !== 'HEATSHIELD_ALERT_CLICKED') return;
+    navigateTo('plan');
+    renderPlanPage();
+  });
+  const requestedPage = new URLSearchParams(window.location.search).get('page');
+  if (requestedPage === 'plan' && AppState.aiPlan && AppState.profile) {
+    navigateTo('plan');
+    renderPlanPage();
+  }
   // Settings button
   const settingsBtn = document.getElementById('settings-btn');
   if (settingsBtn) settingsBtn.addEventListener('click', openSettings);
@@ -765,7 +843,14 @@ document.addEventListener('DOMContentLoaded', () => {
   updateStepIndicator();
   renderHomeStatus();
   renderOfflineStatus();
-  window.addEventListener('online', renderOfflineStatus);
+  window.addEventListener('online', () => {
+    renderOfflineStatus();
+    if (AppState.profile) {
+      AppState.heatwaveContext = getHeatwaveContext(AppState.profile.city);
+      persistState();
+      renderHomeStatus();
+    }
+  });
   window.addEventListener('offline', renderOfflineStatus);
   console.log('🔥 HeatShield AI initialised');
 });

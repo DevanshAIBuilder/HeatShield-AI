@@ -9,6 +9,7 @@
   <meta name="description" content="HeatShield AI analyses your household profile to identify heatwave vulnerability factors and generate a personalised preparedness plan. Built on NDMA and IMD guidelines.">
   <meta name="keywords" content="heatwave preparedness, heat safety India, NDMA heat wave, household vulnerability, heat stroke prevention">
   <meta name="author" content="HeatShield AI — Team Devansh, Arsh, Ehtesham">
+  <link rel="manifest" href="manifest.json">
 
   <!-- Open Graph -->
   <meta property="og:title" content="HeatShield AI — Heatwave Preparedness Agent">
@@ -55,7 +56,8 @@
   ════════════════════════════════════════════════════════════ -->
   <main id="app-main">
     <div id="offline-status" class="offline-banner hidden" role="status">
-      <strong>Offline Mode</strong><span>Your saved household profile and last preparedness plan are still available.</span>
+      <strong>Offline Mode</strong><span>Your saved household profile and last preparedness plan are available offline.</span>
+      <small id="offline-last-known"></small>
     </div>
 
     <!-- ─── PAGE 1: HOME ──────────────────────────────────── -->

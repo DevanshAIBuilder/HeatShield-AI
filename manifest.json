@@ -1,0 +1,17 @@
+{
+  "name": "HeatShield AI",
+  "short_name": "HeatShield",
+  "start_url": "./index.html",
+  "display": "standalone",
+  "theme_color": "#070710",
+  "background_color": "#070710",
+  "description": "Offline-first household heatwave preparedness guidance.",
+  "icons": [
+    {
+      "src": "assets/heatshield-icon.svg",
+      "sizes": "any",
+      "type": "image/svg+xml",
+      "purpose": "any maskable"
+    }
+  ]
+}
